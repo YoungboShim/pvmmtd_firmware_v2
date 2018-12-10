@@ -30,9 +30,10 @@ bool pokeOn[9] = {false, false, false, false, false, false, false, false, false}
 bool motorOn[9] = {false, false, false, false, false, false, false, false, false};
 
 int curTime = 0; // Timer starts from 0 when pattern starts
+int initDepth = 110; // Minimum depth when foot contacts the display's bottom
 int inDepth[9] = {110, 110, 110, 110, 110, 110, 110, 110, 110};
-int degMmRatio = 20; // servo motor movement control (deg/mm)
-int inoutDiff = (int)(1.5f * degMmRatio); // initiate poking depth to 1.5 mm
+float degMmRatio = 20.0; // servo motor movement control (deg/mm)
+int inoutDiff = (int)(1.5f * degMmRatio); // initiate poking depth to 1.5 mm (deg)
 
 void setup() {
   pinMode (motor1_F, OUTPUT);
@@ -108,6 +109,8 @@ void loopSerial()
     char c1 = line[0], c2 = line[1], c3 = line[2], c4 = line[3];
     int pokeNum = 0;
     int motorNum = 0;
+    float inPositionMm = 0.0;
+    float tmpDepth = 0.0;
     
     switch(c1)
     {
@@ -169,14 +172,38 @@ void loopSerial()
         }
         Serial.flush();
         break;
-      case 's':
-        Serial.println("Remove foot");
-        Serial.flush();
-        for(int i=0;i<9;i++)
+      case 't':
+        pokeNum = (int)c2 - 49;
+        if(0 <= pokeNum && pokeNum < 9)
         {
-          pokeOn[i] = false;
-          servoPoke(i, 180);
+          inPositionMm = ((c3 - 48) * 10 + (c4 - 48)) / 10.0; // unit: 0.1 mm
+          int inPositionDeg = (int)(initDepth - inPositionMm * degMmRatio);
+          if (inPositionDeg >= (float)inoutDiff)
+          {
+            Serial.print("Tactor ");
+            Serial.print(c2);
+            Serial.print(" in-position: ");
+            Serial.print(inPositionMm);
+            Serial.println(" mm");
+            inDepth[pokeNum] = inPositionDeg;
+            servoPoke(pokeNum, inDepth[pokeNum]);
+          }
+          else
+          {
+            Serial.print("Error out of range: ");
+            Serial.print(inPositionMm);
+            Serial.println(" mm");
+          }
+          Serial.flush();
         }
+        break;
+      case 'd':
+        tmpDepth = ((c2 - 48) * 10 + (c3 - 48)) / 10.0;
+        inoutDiff = tmpDepth * degMmRatio;
+        Serial.print("Poking depth: ");
+        Serial.print(tmpDepth);
+        Serial.println(" mm");
+        Serial.flush();
         break;
       case 'r':
         Serial.println("Remove foot");
