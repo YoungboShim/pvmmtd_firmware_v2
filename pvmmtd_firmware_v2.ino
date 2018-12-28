@@ -30,8 +30,8 @@ bool pokeOn[9] = {false, false, false, false, false, false, false, false, false}
 bool motorOn[9] = {false, false, false, false, false, false, false, false, false};
 
 int curTime = 0; // Timer starts from 0 when pattern starts
-int initDepth = 110; // Minimum depth when foot contacts the display's bottom
-int inDepth[9] = {110, 110, 110, 110, 110, 110, 110, 110, 110};
+int initDepth = 80; // Minimum depth when foot contacts the display's bottom
+int inDepth[9] = {80, 80, 80, 80, 80, 80, 80, 80, 80};
 float degMmRatio = 20.0; // servo motor movement control (deg/mm)
 int inoutDiff = (int)(1.5f * degMmRatio); // initiate poking depth to 1.5 mm (deg)
 
@@ -176,7 +176,7 @@ void loopSerial()
         pokeNum = (int)c2 - 49;
         if(0 <= pokeNum && pokeNum < 9)
         {
-          inPositionMm = ((c3 - 48) * 10 + (c4 - 48)) / 10.0; // unit: 0.1 mm
+          inPositionMm = ((c3 - 48) * 10 + (c4 - 48)) / 10.0; // unit: mm
           int inPositionDeg = (int)(initDepth - inPositionMm * degMmRatio);
           if (inPositionDeg >= (float)inoutDiff)
           {
@@ -226,7 +226,7 @@ void loopSerial()
 void servoPoke (int servoNum, int angle)
 {
   digitalWrite(pokePin[servoNum], HIGH);
-  delayMicroseconds(map(angle, 0, 180, 500, 2300));
+  delayMicroseconds(map(angle, 0, 180, 600, 2300));
   digitalWrite(pokePin[servoNum], LOW);
 }
 
