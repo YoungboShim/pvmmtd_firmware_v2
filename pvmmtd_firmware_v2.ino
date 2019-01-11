@@ -32,16 +32,17 @@ const bool initBool[9] = {false, false, false, false, false, false, false, false
 
 int curTime = 0; // Timer starts from 0 when pattern starts
 const int duration = 400;// Pattern's duration(ms)
+const int breakTime = 150;
 const int pokeOffTime = duration - 33;
-int initDepth = 80; // Minimum depth when foot contacts the display's bottom
-int inDepth[9] = {80, 80, 80, 80, 80, 80, 80, 80, 80};
+int initDepth = 120; // Minimum depth when foot contacts the display's bottom
+int inDepth[9] = {120, 120, 120, 120, 120, 120, 120, 120, 120};
 float degMmRatio = 20.0; // servo motor movement control (deg/mm)
-int inoutDiff = (int)(1.5f * degMmRatio); // initiate poking depth to 1.5 mm (deg)
+int inoutDiff = (int)(2.0f * degMmRatio); // initiate poking depth to 1.5 mm (deg)
 
 bool patternOn = false;
 char inputP[4] = {'n', 'n', 'n', 'n'};
-bool cmdDelivered[4] = {false, false, false, false};
-bool initCmdD[4] = {false, false, false, false};
+bool cmdDelivered[5] = {false, false, false, false, false};
+bool initCmdD[5] = {false, false, false, false, false};
 
 void setup() {
   pinMode (motor1_F, OUTPUT);
@@ -234,7 +235,7 @@ void loopSerial()
         inputP[3] = c4;
         patternOn = true;
         curTime = 0;
-        memcpy(cmdDelivered, initCmdD, 4 * sizeof(bool));
+        memcpy(cmdDelivered, initCmdD, 5 * sizeof(bool));
         Serial.println("Pattern: " + String(c1) + String(c2) + String(c3) + String(c4));
         break;
       default:
@@ -250,22 +251,26 @@ void loopPatternManager()
 {
   if(patternOn)
   {
-    if(curTime > duration * 2)
+    if(curTime > duration * 2 + breakTime)
     {
       memcpy(motorOn, initBool, 9 * sizeof(bool)); 
         
       patternOn = false;
     }
-    else if(curTime > duration + pokeOffTime && !cmdDelivered[3])
+    else if(curTime > duration + breakTime + pokeOffTime && !cmdDelivered[4])
     {
       actPoke(inputP[2], false);
+      cmdDelivered[4] = true;
+    }
+    else if(curTime > duration + breakTime && !cmdDelivered[3])
+    {
+      actPoke(inputP[2], true);
+      actMotor(inputP[3], true);
       cmdDelivered[3] = true;
     }
     else if(curTime > duration && !cmdDelivered[2])
     {
       actMotor(inputP[1], false);
-      actPoke(inputP[2], true);
-      actMotor(inputP[3], true);
       cmdDelivered[2] = true;
     }
     else if(curTime > pokeOffTime && !cmdDelivered[1])
