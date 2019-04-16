@@ -28,12 +28,21 @@ char inData[1000];
 int dataIdx = 0;
 bool pokeOn[9] = {false, false, false, false, false, false, false, false, false};
 bool motorOn[9] = {false, false, false, false, false, false, false, false, false};
+const bool initBool[9] = {false, false, false, false, false, false, false, false, false};
 
 int curTime = 0; // Timer starts from 0 when pattern starts
-int initDepth = 80; // Minimum depth when foot contacts the display's bottom
-int inDepth[9] = {80, 80, 80, 80, 80, 80, 80, 80, 80};
+const int duration = 275;// Pattern's duration(ms)
+const int breakTime = 275;
+const int pokeOffTime = duration - 33;
+int initDepth = 120; // Minimum depth when foot contacts the display's bottom
+int inDepth[9] = {120, 120, 120, 120, 120, 120, 120, 120, 120};
 float degMmRatio = 20.0; // servo motor movement control (deg/mm)
-int inoutDiff = (int)(1.5f * degMmRatio); // initiate poking depth to 1.5 mm (deg)
+int inoutDiff = (int)(2.0f * degMmRatio); // initiate poking depth to 2.0 mm (deg)
+
+bool patternOn = false;
+char inputP[4] = {'n', 'n', 'n', 'n'};
+bool cmdDelivered[5] = {false, false, false, false, false};
+bool initCmdD[5] = {false, false, false, false, false};
 
 void setup() {
   pinMode (motor1_F, OUTPUT);
@@ -71,6 +80,7 @@ void setup() {
 }
 
 void loop() {
+  loopPatternManager();
   loopSerial();
   loopMotorOnOff();
 }
@@ -152,7 +162,7 @@ void loopSerial()
           Serial.flush();
         }
         break;
-      case 'a':
+      case 's':
         motorNum = (int)c2 - 49;
         if(0 <= motorNum && motorNum < 9)
         {
@@ -197,7 +207,7 @@ void loopSerial()
           Serial.flush();
         }
         break;
-      case 'd':
+      case 'l':
         tmpDepth = ((c2 - 48) * 10 + (c3 - 48)) / 10.0;
         inoutDiff = tmpDepth * degMmRatio;
         Serial.print("Poking depth: ");
@@ -214,10 +224,162 @@ void loopSerial()
           servoPoke(i, 0);
         }
         break;
+      case 'a':
+      case 'b':
+      case 'c':
+      case 'd':
+      case 'n':
+        inputP[0] = c1;
+        inputP[1] = c2;
+        inputP[2] = c3;
+        inputP[3] = c4;
+        patternOn = true;
+        curTime = 0;
+        memcpy(cmdDelivered, initCmdD, 5 * sizeof(bool));
+        Serial.println("Pattern: " + String(c1) + String(c2) + String(c3) + String(c4));
+        break;
       default:
         break;
     }
     stringComplete = false;
+  }
+}
+
+// Function: loopPatternManager
+// Check if the counter exceeds the duration and change or turn off the pattern bools
+void loopPatternManager()
+{
+  if(patternOn)
+  {
+    if(curTime > duration * 2 + breakTime)
+    {
+      memcpy(motorOn, initBool, 9 * sizeof(bool)); 
+        
+      patternOn = false;
+    }
+    else if(curTime > duration + breakTime + pokeOffTime && !cmdDelivered[4])
+    {
+      actPoke(inputP[2], false);
+      cmdDelivered[4] = true;
+    }
+    else if(curTime > duration + breakTime && !cmdDelivered[3])
+    {
+      actPoke(inputP[2], true);
+      actMotor(inputP[3], true);
+      cmdDelivered[3] = true;
+    }
+    else if(curTime > duration && !cmdDelivered[2])
+    {
+      actMotor(inputP[1], false);
+      cmdDelivered[2] = true;
+    }
+    else if(curTime > pokeOffTime && !cmdDelivered[1])
+    {
+      actPoke(inputP[0], false);
+      cmdDelivered[1] = true;
+    }
+    else if(curTime > 0 && !cmdDelivered[0])
+    {
+      actPoke(inputP[0], true);
+      actMotor(inputP[1], true);
+      cmdDelivered[0] = true;
+    }
+  }
+}
+
+void actPoke(char cmd, bool onoff){
+  switch(cmd)
+  {
+    case 'a':
+      if(onoff)
+      {
+        servoPoke(2, inDepth[2] - inoutDiff);
+      }
+      else
+      {
+        servoPoke(2, inDepth[2]);
+      }
+      break;
+    case 'b':
+      if(onoff)
+      {
+        servoPoke(8, inDepth[5] - inoutDiff);
+      }
+      else
+      {
+        servoPoke(8, inDepth[5]);
+      }
+      break;
+    case 'c':
+      if(onoff)
+      {
+        servoPoke(0, inDepth[1] - inoutDiff);
+      }
+      else
+      {
+        servoPoke(0, inDepth[1]);
+      }
+      break;
+    case 'd':
+      if(onoff)
+      {
+        servoPoke(6, inDepth[4] - inoutDiff);
+      }
+      else
+      {
+        servoPoke(6, inDepth[4]);
+      }
+      break;
+    default:
+      break;
+  }
+}
+
+void actMotor(char cmd, bool onoff){
+  switch(cmd)
+  {
+    case 'a':
+      if(onoff)
+      {
+        motorOn[2] = true;
+      }
+      else
+      {
+        motorOn[2] =false;
+      }
+      break;
+    case 'b':
+      if(onoff)
+      {
+        motorOn[8] = true;
+      }
+      else
+      {
+        motorOn[8] =false;
+      }
+      break;
+    case 'c':
+      if(onoff)
+      {
+        motorOn[0] = true;
+      }
+      else
+      {
+        motorOn[0] =false;
+      }
+      break;
+    case 'd':
+      if(onoff)
+      {
+        motorOn[6] = true;
+      }
+      else
+      {
+        motorOn[6] =false;
+      }
+      break;
+    default:
+      break;
   }
 }
 
@@ -226,7 +388,7 @@ void loopSerial()
 void servoPoke (int servoNum, int angle)
 {
   digitalWrite(pokePin[servoNum], HIGH);
-  delayMicroseconds(map(angle, 0, 180, 600, 2300));
+  delayMicroseconds(map(angle, 0, 180, 500, 2300));
   digitalWrite(pokePin[servoNum], LOW);
 }
 
