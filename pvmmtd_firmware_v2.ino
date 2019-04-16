@@ -31,13 +31,13 @@ bool motorOn[9] = {false, false, false, false, false, false, false, false, false
 const bool initBool[9] = {false, false, false, false, false, false, false, false, false};
 
 int curTime = 0; // Timer starts from 0 when pattern starts
-const int duration = 400;// Pattern's duration(ms)
-const int breakTime = 150;
+const int duration = 275;// Pattern's duration(ms)
+const int breakTime = 275;
 const int pokeOffTime = duration - 33;
 int initDepth = 120; // Minimum depth when foot contacts the display's bottom
 int inDepth[9] = {120, 120, 120, 120, 120, 120, 120, 120, 120};
 float degMmRatio = 20.0; // servo motor movement control (deg/mm)
-int inoutDiff = (int)(2.0f * degMmRatio); // initiate poking depth to 1.5 mm (deg)
+int inoutDiff = (int)(2.0f * degMmRatio); // initiate poking depth to 2.0 mm (deg)
 
 bool patternOn = false;
 char inputP[4] = {'n', 'n', 'n', 'n'};
@@ -303,31 +303,31 @@ void actPoke(char cmd, bool onoff){
     case 'b':
       if(onoff)
       {
-        servoPoke(5, inDepth[5] - inoutDiff);
+        servoPoke(8, inDepth[5] - inoutDiff);
       }
       else
       {
-        servoPoke(5, inDepth[5]);
+        servoPoke(8, inDepth[5]);
       }
       break;
     case 'c':
       if(onoff)
       {
-        servoPoke(1, inDepth[1] - inoutDiff);
+        servoPoke(0, inDepth[1] - inoutDiff);
       }
       else
       {
-        servoPoke(1, inDepth[1]);
+        servoPoke(0, inDepth[1]);
       }
       break;
     case 'd':
       if(onoff)
       {
-        servoPoke(4, inDepth[4] - inoutDiff);
+        servoPoke(6, inDepth[4] - inoutDiff);
       }
       else
       {
-        servoPoke(4, inDepth[4]);
+        servoPoke(6, inDepth[4]);
       }
       break;
     default:
@@ -351,31 +351,31 @@ void actMotor(char cmd, bool onoff){
     case 'b':
       if(onoff)
       {
-        motorOn[5] = true;
+        motorOn[8] = true;
       }
       else
       {
-        motorOn[5] =false;
+        motorOn[8] =false;
       }
       break;
     case 'c':
       if(onoff)
       {
-        motorOn[1] = true;
+        motorOn[0] = true;
       }
       else
       {
-        motorOn[1] =false;
+        motorOn[0] =false;
       }
       break;
     case 'd':
       if(onoff)
       {
-        motorOn[4] = true;
+        motorOn[6] = true;
       }
       else
       {
-        motorOn[4] =false;
+        motorOn[6] =false;
       }
       break;
     default:
@@ -388,7 +388,7 @@ void actMotor(char cmd, bool onoff){
 void servoPoke (int servoNum, int angle)
 {
   digitalWrite(pokePin[servoNum], HIGH);
-  delayMicroseconds(map(angle, 0, 180, 600, 2300));
+  delayMicroseconds(map(angle, 0, 180, 500, 2300));
   digitalWrite(pokePin[servoNum], LOW);
 }
 
