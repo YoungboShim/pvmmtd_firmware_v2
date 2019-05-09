@@ -34,10 +34,10 @@ int curTime = 0; // Timer starts from 0 when pattern starts
 const int duration = 275;// Pattern's duration(ms)
 const int breakTime = 275;
 const int pokeOffTime = duration - 33;
-int initDepth = 120; // Minimum depth when foot contacts the display's bottom
-int inDepth[9] = {120, 120, 120, 120, 120, 120, 120, 120, 120};
+int initDepth = 170; // Minimum depth when foot contacts the display's bottom
+int inDepth[9] = {170, 170, 170, 170, 170, 170, 170, 170, 170};
 float degMmRatio = 20.0; // servo motor movement control (deg/mm)
-int inoutDiff = (int)(2.0f * degMmRatio); // initiate poking depth to 2.0 mm (deg)
+int inoutDiff = (int)(1.5f * degMmRatio); // initiate poking depth to 1.5 mm (deg)
 
 bool patternOn = false;
 char inputP[4] = {'n', 'n', 'n', 'n'};
@@ -681,4 +681,3 @@ void delayCount(int time)
   curTime = curTime + time;
   delay(time);
 }
-
