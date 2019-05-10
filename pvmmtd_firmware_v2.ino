@@ -170,6 +170,7 @@ void loopSerial()
         Serial.println("Stop all");
         for(int i=0;i<9;i++)
         {
+          inDepth[i] = initDepth;
           pokeOn[i] = false;
           motorOn[i] = false;
           servoPoke(i, inDepth[i]);
