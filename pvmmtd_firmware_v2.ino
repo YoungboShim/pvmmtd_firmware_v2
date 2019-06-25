@@ -39,6 +39,10 @@ int inDepth[9] = {170, 170, 170, 170, 170, 170, 170, 170, 170};
 float degMmRatio = 20.0; // servo motor movement control (deg/mm)
 int inoutDiff = (int)(1.5f * degMmRatio); // initiate poking depth to 1.5 mm (deg)
 
+int motorFrequency = 166;  // Unit :  Hz
+int motorTimePeriod = (int)(1000000.0 / motorFrequency); // Unit : us, microseconds
+float PWMpercent = 100.0; // Unit : %
+
 void setup() {
   pinMode (motor1_F, OUTPUT);
   pinMode (motor1_R, OUTPUT);
@@ -155,6 +159,31 @@ void loopSerial()
           }
           Serial.flush();
         }
+        break;
+      case 'f': //control frequency of vibration
+
+        motorFrequency = ((int)c2-48)*100+((int)c3-48)*10+((int)c4-48);
+        motorTimePeriod = (int)(1000000.0 / motorFrequency); // Unit : us, microseconds
+        
+        Serial.print("motorFrequency : ");
+        Serial.print(motorFrequency);
+        Serial.print(", motorTimePeriod : ");
+        Serial.println(motorTimePeriod);
+      
+        break;
+      case 'w': //control PWM percentage of vibration
+        PWMpercent = ((int)c2-48)*100+((int)c3-48)*10+((int)c4-48);
+        Serial.print("PWMpercent : ");
+        Serial.println(PWMpercent);
+
+        Serial.print("First half, up, (int)((motorTimePeriod / 2)*(PWMpercent/100)) : ");
+        Serial.println((int)((motorTimePeriod / 2)*(PWMpercent/100)));
+        Serial.print("First half, down, (int)((motorTimePeriod / 2)*(1-(PWMpercent/100))) : ");
+        Serial.println((int)((motorTimePeriod / 2)*(1-(PWMpercent/100))));
+        Serial.print("Second half, down, (int)((motorTimePeriod / 2)*(PWMpercent/100)) : ");
+        Serial.println((int)((motorTimePeriod / 2)*(PWMpercent/100)));
+        Serial.print("First half, up, (int)((motorTimePeriod / 2)*(1-(PWMpercent/100))) : ");
+        Serial.println((int)((motorTimePeriod / 2)*(1-(PWMpercent/100))));
         break;
       case 'a':
         motorNum = (int)c2 - 49;
@@ -305,7 +334,10 @@ void loopMotorOnOff ()
     digitalWrite(motor9_R, LOW);
   }
   
-  delayCount(3);
+  //delayCount(3);
+  
+  delayMicroseconds((int)((motorTimePeriod / 2)*(PWMpercent/100)));
+  
   
   if(motorOn[0])
   {
@@ -352,7 +384,10 @@ void loopMotorOnOff ()
     digitalWrite(motor9_F, LOW);
     digitalWrite(motor9_R, LOW);
   }
-    
+
+  delayMicroseconds((int)((motorTimePeriod / 2)*(1-(PWMpercent/100))));
+  
+  
   //Reverse
   if(motorOn[0])
   {
@@ -400,7 +435,11 @@ void loopMotorOnOff ()
     digitalWrite(motor9_R, HIGH);
   }
 
-  delayCount(3);
+
+  //delayCount(3);
+  delayMicroseconds((int)((motorTimePeriod / 2)*(PWMpercent/100)));
+  
+
   
   if(motorOn[0])
   {
@@ -447,6 +486,10 @@ void loopMotorOnOff ()
     digitalWrite(motor9_F, LOW);
     digitalWrite(motor9_R, LOW);
   }
+
+  delayMicroseconds((int)((motorTimePeriod / 2)*(1-(PWMpercent/100))));
+  
+  
 }
 
 void motorPulse(int motor_Num)
